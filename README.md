@@ -39,15 +39,23 @@ lies, all caught here:
 
 1. **"Learned it, then forgot it"** — best checkpoint was mid-training,
    you kept the worse final one. The final number understates your model.
-2. **Memorization** — train 99% / eval 71% means expect ~71% in production.
-   The number you screenshotted overstates your model.
+2. **Memorization** — train 99% / eval 71% *and eval has stagnated* means
+   expect ~71% in production. (Fast train convergence with eval still
+   climbing — common with LoRA — is deliberately **not** flagged; that's
+   normal, not memorization. The check looks at the trend, not just a
+   snapshot.)
 3. **Oscillation** — if the metric bounced around, one run's final number
    is an anecdote. You need seeds before you need conclusions.
 
 ## Install
 
-Copy `trustcheck.py` into your project. That's it. (PyPI package coming
-if anyone besides us wants this — open an issue and say so.)
+```bash
+pip install trustcheck            # core, zero dependencies
+pip install trustcheck[hf]        # + HuggingFace Trainer callback
+```
+
+Or just copy `src/trustcheck/__init__.py` into your project — it's one file
+with no required dependencies.
 
 ## Use
 
@@ -79,10 +87,16 @@ if v.level == "DO_NOT_TRUST":
     ...
 ```
 
-**Demo** (see it catch three lying runs):
+**Runnable example** (a real memorizing run, caught — no GPU, seconds):
 
+```bash
+python examples/quickstart.py
 ```
-python trustcheck.py
+
+**Tests** (yes, the trust tool has tests):
+
+```bash
+pip install trustcheck[dev] && pytest
 ```
 
 ## What it deliberately does NOT do (yet)
@@ -99,6 +113,31 @@ python trustcheck.py
 All cutoffs (`memorization_gap=0.10`, `forgotten_gap=0.02`, ...) are plain
 constructor arguments. Read them, disagree, tune them. No black box —
 if this tool tells you not to trust something, you can see exactly why.
+
+## Roadmap (not built yet — prioritized by what real usage shows we need)
+
+A few improvements are known and deliberately deferred rather than guessed
+at now:
+
+- **Smoother trend detection** — the oscillation/forgetting checks currently
+  use a fairly direct point-to-point comparison. An exponential moving
+  average (with tolerance) would better distinguish "a single 2% wobble"
+  from "steadily declining for the last 10 evals."
+- **Early-stopping awareness** — if you're already using an early-stopping
+  callback, the final checkpoint is usually at-or-near the best one; the
+  monitor should recognize that setup and not warn about something that's
+  already handled.
+- **Quantified seed guidance** — right now the tool says "this run
+  oscillated, check multiple seeds." If you *do* run several seeds, it
+  could go further: "variance across 5 runs is 8% — that's above a
+  reasonable tolerance, results aren't stable yet."
+- **Actionable checkpoint recovery** — `Verdict` already exposes
+  `best_step`/`best_metric`; a natural next step is optionally returning or
+  saving the best checkpoint directly, not just naming the step in text.
+
+None of this is implemented speculatively — it goes in when a real use
+case asks for it. If one of these is the thing blocking you, say so in an
+issue and it moves up the list.
 
 ## Status
 
