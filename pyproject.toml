@@ -1,0 +1,37 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "trustcheck"
+version = "0.1.0"
+description = "Should you trust your fine-tune's validation number? A tiny local sanity layer for training small models."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [{ name = "trustcheck" }]
+keywords = [
+    "machine-learning", "fine-tuning", "training", "overfitting",
+    "memorization", "validation", "model-evaluation", "llm", "huggingface",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+# Zero required dependencies. transformers is optional (only for the callback).
+dependencies = []
+
+[project.optional-dependencies]
+hf = ["transformers>=4.0.0"]
+dev = ["pytest>=7.0"]
+
+[project.urls]
+Homepage = "https://github.com/YOURNAME/trustcheck"
+Issues = "https://github.com/YOURNAME/trustcheck/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/trustcheck"]
